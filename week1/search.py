@@ -25,7 +25,7 @@ def process_filters(filters_input):
         type = request.args.get(filter + ".type")
         display_name = request.args.get(filter + ".displayName", filter)
         applied_filters += "&filter.name={}&{}.type={}&{}.displayName={}".format(filter, filter, type, filter,
-                                                                                 display_name)
+                                                                                display_name)
         if type == "range":
             from_val = request.args.get(filter + ".from", None)
             to_val = request.args.get(filter + ".to", None)
@@ -93,10 +93,10 @@ def query():
 
     #### Step 4.b.ii
     try:
-        price_range_filter = [filter for filter in filters if "range" in filter and "regularPrice" in filter["range"]]
+        price_range_filter = filters and [filter for filter in filters if "range" in filter and "regularPrice" in filter["range"]]
         if price_range_filter:
             # do not calculate or update price_percentiles if there is already a price filter applied
-            pass
+            unique_price_percentiles = []
         else:
             price_percentiles_query = create_price_percentiles_query(user_query, filters)
             price_percentiles_response = opensearch.search(body=price_percentiles_query, index="bbuy_products")
@@ -175,7 +175,7 @@ def map_price_percentiles_to_ranges(unique_price_percentiles: list[int]):
     previous_value = 0
     ranges = []
     if len(unique_price_percentiles) <= 1: 
-        ranges.append({ "key": "$", "from": math.floor(unique_price_percentiles[0]) if unique_price_percentiles[0] else 0})
+        return None
     else:   
         for index, raw_value in enumerate(unique_price_percentiles):
             current_value = math.ceil(raw_value)
@@ -204,6 +204,15 @@ def create_price_percentiles_query(user_query, filters):
 
 def create_query(user_query, filters, sort, sortDir, unique_price_percentiles: list[int]):
     print("Query: {} Filters: {} Sort: {}".format(user_query, filters, sort))
+    ranges = map_price_percentiles_to_ranges(unique_price_percentiles)
+    price_range_agg = {
+        "regularPrice": {
+                "range": {
+                    "field": "regularPrice",
+                    "ranges": ranges
+                },
+            }
+    } if ranges else {}
     query_obj = {
         **create_search_query(user_query=user_query, filters=filters),
         "sort": [
@@ -237,12 +246,7 @@ def create_query(user_query, filters, sort, sortDir, unique_price_percentiles: l
                     "field": "image",
                 }
             },
-            "regularPrice": {
-                "range": {
-                    "field": "regularPrice",
-                    "ranges": map_price_percentiles_to_ranges(unique_price_percentiles)
-                },
-            }
+            **price_range_agg
         }
     }
     return query_obj

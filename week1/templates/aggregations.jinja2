@@ -1,9 +1,9 @@
 <div id="aggregations">
   {% if search_response.aggregations%}
   <div class="aggregations-result">
-    <div class="agg-header uppercase text-slate-600 pb-2 text-sm">Price</div>
     {% if "filter.name=regularPrice" not in applied_filters %}
-      {% if search_response.aggregations.regularPrice.buckets|length > 1 %}
+      <div class="agg-header uppercase text-slate-600 pb-2 text-sm">Price</div>
+      {% if "regularPrice" in search_response.aggregations and search_response.aggregations.regularPrice.buckets|length > 1 %}
         {% for agg in search_response.aggregations.regularPrice.buckets  %}
           {% if agg.doc_count > 0 %}
             <div class="aggregation">
@@ -18,12 +18,14 @@
       {% endif %}
     {% else %}
       {# We've already applied it, just display it #}
-      {% for agg in search_response.aggregations.regularPrice.buckets %}
-        {% if agg.doc_count > 0 %}
-          <div class="aggregation">
-            <div>{{ agg.key }}: {{ agg.doc_count }}</div>
-          </div>{% endif %}
-      {% endfor %}
+      {% if "regularPrice" in search_response.aggregations %}
+        {% for agg in search_response.aggregations.regularPrice.buckets %}
+          {% if agg.doc_count > 0 %}
+            <div class="aggregation">
+              <div>{{ agg.key }}: {{ agg.doc_count }}</div>
+            </div>{% endif %}
+        {% endfor %}
+      {% endif %}
     {% endif %}
   </div>
   <div class="aggregations-result">
