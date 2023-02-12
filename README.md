@@ -90,3 +90,9 @@ Note: these have only been tested on a Mac running OS 12.2.1.  YMMV.  Much of wh
 5. Note: most of the scripts and projects assume the data is in `/workspace/datasets`, but have overrides to specify your own directories. You will need to download and plan accordingly.  
 6. Do your work per the Weekly Project     
     
+
+## LOCAL SETUP
+
+Preferably configure an activate a venv using VSCODE
+
+pip install -r requirements.txt
