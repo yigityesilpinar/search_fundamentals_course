@@ -93,7 +93,7 @@ def query():
 
     #### Step 4.b.ii
     try:
-        price_range_filter = [filter for filter in test if "range" in filter and "regularPrice" in filter["range"]]
+        price_range_filter = [filter for filter in filters if "range" in filter and "regularPrice" in filter["range"]]
         if price_range_filter:
             # do not calculate or update price_percentiles if there is already a price filter applied
             pass
