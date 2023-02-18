@@ -13,7 +13,7 @@ def create_stats_query(aggs, extended=True):
 
 
 # Hardcoded query here.  Better to use search templates or other query config.
-def create_query(user_query, filters, sort="_score", sortDir="desc", size=10, include_aggs=True, highlight=True, source=None):
+def create_query(user_query, filters, sort="_score", sortDir="desc", size=10, include_aggs=True, highlight=True, source=None, priors_gb=None):
     query_obj = {
         'size': size,
         "sort":[
@@ -35,6 +35,17 @@ def create_query(user_query, filters, sort="_score", sortDir="desc", size=10, in
                                         "fuzziness": "1",
                                         "prefix_length": 2, # short words are often acronyms or usually not misspelled, so don't edit
                                         "boost": 0.01
+                                    }
+                               }
+                            },
+                                 # Last gasp attempt at matching, based on the assumption the query is misspelled.
+                             {
+                                 "match": {
+                                    "name.hyphens": {
+                                        "query": user_query,
+                                        "fuzziness": "1",
+                                        "prefix_length": 2, # short words are often acronyms or usually not misspelled, so don't edit
+                                        "boost": 0.01,
                                     }
                                }
                             },
@@ -79,7 +90,7 @@ def create_query(user_query, filters, sort="_score", sortDir="desc", size=10, in
                     }
                 },
                 "boost_mode": "multiply", # how _score and functions are combined
-                "score_mode": "sum", # how functions are combined
+                "score_mode": "max", # how functions are combined
                 # Use a scaled sales rank as factor in scoring.  This helps popular items rise to the top while still matching on keywords
                 "functions": [
                     {
@@ -131,6 +142,16 @@ def create_query(user_query, filters, sort="_score", sortDir="desc", size=10, in
             }
         }
     }
+    # match_phrase boosted scores => ~ 200 - 6000
+    # multi_match general => ~ 10 - 2000
+    # terms (sku) boosted => 50
+    # fuzzy deboosted 0.01 => 0.07019033
+    # total _score =>  ~ 0.07 - 10000
+
+    # for query iphone:
+    # max _score without functions 430
+    # impact of clicks with boost 1000 => ~ 136 - 5461 (at %40 click rate for a query, which is a lot)
+
     if user_query == "*" or user_query == "#":
         #replace the bool
         try:
@@ -150,6 +171,10 @@ def create_query(user_query, filters, sort="_score", sortDir="desc", size=10, in
 
     if include_aggs:
         add_aggs(query_obj)
+
+    if priors_gb:
+        add_click_priors(query_obj=query_obj, user_query=user_query, priors_gb=priors_gb)
+    
     return query_obj
 
 
@@ -178,12 +203,32 @@ def add_click_priors(query_obj, user_query, priors_gb):
     try:
         prior_clicks_for_query = priors_gb.get_group(user_query)
         if prior_clicks_for_query is not None and len(prior_clicks_for_query) > 0:
-            click_prior = ""
+            significant_weight_threshold = 0.01
+            total_click_count = prior_clicks_for_query.sku.count()
+            click_count_by_sku = dict(prior_clicks_for_query.sku.value_counts())
+            significant_weight_by_sku_list = []
+            for sku in click_count_by_sku:
+                num_of_clicks = click_count_by_sku[sku]
+                click_ratio = num_of_clicks / total_click_count
+                if click_ratio >= significant_weight_threshold:
+                    significant_weight_by_sku_list.append({
+                        "sku": sku,
+                        "weight": click_ratio
+                    })
+
+            mapped_click_weights = [f"{weight_by_sku['sku']}^{weight_by_sku['weight']:.2f}" for weight_by_sku in significant_weight_by_sku_list]
+            click_prior = " ".join(mapped_click_weights)   
             #### W2, L1, S1
             # Create a string object of SKUs and weights that will boost documents matching the SKU
-            print("TODO: Implement me")
             if click_prior != "":
-                click_prior_query_obj = None # Implement a query object that matches on the ID or SKU with weights of
+                # Implement a query object that matches on the ID or SKU with weights of
+                click_prior_query_obj = {
+                    "query_string": {
+                        "query": f"({click_prior})^1000",
+                        "fields": ["sku"]
+                    }
+                }
+                # print(mapped_click_weights)
                 # This may feel like cheating, but it's really not, esp. in ecommerce where you have all this prior data,
                 if click_prior_query_obj is not None:
                     query_obj["query"]["function_score"]["query"]["bool"]["should"].append(click_prior_query_obj)

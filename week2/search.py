@@ -29,7 +29,7 @@ def process_filters(filters_input):
         if type == "range":
             from_val = request.args.get(filter + ".from", None)
             to_val = request.args.get(filter + ".to", None)
-            print("from: {}, to: {}".format(from_val, to_val))
+            # print("from: {}, to: {}".format(from_val, to_val))
             # we need to turn the "to-from" syntax of aggregations to the "gte,lte" syntax of range filters.
             to_from = {}
             if from_val and from_val != "*":
@@ -51,7 +51,7 @@ def process_filters(filters_input):
             filters.append(the_filter)
             display_filters.append("{}: {}".format(display_name, key))
             applied_filters += "&{}.fieldName={}&{}.key={}".format(filter, field, filter, key)
-    print("Filters: {}".format(filters))
+    # print("Filters: {}".format(filters))
 
     return filters, display_filters, applied_filters
 
@@ -86,7 +86,7 @@ def query():
 
     autocompleteSelect = "queries"
     explain = False
-    prior_clicks = current_app.config.get("priors_gb")
+    priors_gb = current_app.config.get("priors_gb")
     if request.method == 'POST':  # a query has been submitted
         user_query = request.form['query']
         if not user_query:
@@ -104,11 +104,11 @@ def query():
         if explain_val == "true":
             explain = True
 
-        query_obj = qu.create_query(user_query,  [], sort, sortDir, size=20)  # We moved create_query to a utility class so we could use it elsewhere.
+        query_obj = qu.create_query(user_query,  [], sort, sortDir, size=20, priors_gb=priors_gb)  # We moved create_query to a utility class so we could use it elsewhere.
         ##### W2, L1, S2
 
         ##### W2, L2, S2
-        print("Plain ol q: %s" % query_obj)
+        # print("Plain ol q: %s" % query_obj)
     elif request.method == 'GET':  # Handle the case where there is no query or just loading the page
         user_query = request.args.get("query", "*")
         filters_input = request.args.getlist("filter.name")
@@ -119,7 +119,7 @@ def query():
             explain = True
         if filters_input:
             (filters, display_filters, applied_filters) = process_filters(filters_input)
-        query_obj = qu.create_query(user_query,  filters, sort, sortDir, size=20)
+        query_obj = qu.create_query(user_query,  filters, sort, sortDir, size=20, priors_gb=priors_gb)
         #### W2, L1, S2
 
         ##### W2, L2, S2
