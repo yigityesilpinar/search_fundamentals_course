@@ -7,7 +7,7 @@ export WEEK1 := week1
 export WEEK2 := week2
 
 SHELL:=/bin/bash
-VENV_DIR=$(shell pyenv root)/versions/search_fundamentals
+VENV_DIR=`pwd`/.venv
 PYTHON=${VENV_DIR}/bin/python
 
 week1: 
@@ -26,3 +26,19 @@ delete:
 	
 download: 
 	./download-data.sh
+
+.PHONY: start
+start:
+	docker-compose -f docker/docker-compose.yml up
+
+.PHONY: track_index_products
+track_index_products:
+	tail -f logs/index_products.log
+
+.PHONY: track_index_queries
+track_index_queries:
+	tail -f logs/index_queries.log
+
+.PHONY: stop
+stop:
+	docker-compose -f docker/docker-compose.yml down

@@ -133,6 +133,25 @@ def query():
 
     #print(response)
     if error is None:
+        # assesment template
+        # indx = 0
+        # queries_response = opensearch.search(body={ "size": 0, "query": { "bool": { "filter": [ { "term": { "query.keyword": user_query} } ] } }, "aggs": { "Query": { "terms": { "size": 10, "field": "query.keyword" }, "aggs":{ "Docs":{ "terms":{ "size": 5, "field": "sku.keyword" } } } } } }, index="bbuy_queries")
+        # top5 = [bucket["key"] for bucket in queries_response["aggregations"]["Query"]["buckets"][0]["Docs"]["buckets"]]
+        # print("\n")
+        # print({"top5": top5})
+        # print("\n")
+        # for hit in response["hits"]["hits"]:
+        #     source = hit["_source"]
+        #     print(f"{indx + 1}. {source['name'][0]}, SKU: {source['sku'][0]}")
+        #     print("    a. Relevant")
+        #     if source['sku'][0] in top5:
+        #         print(f"    b. YES top 5 (#{top5.index(source['sku'][0]) + 1})")
+        #     else:
+        #         print(f"    b. NOT in top 5")
+        #     indx += 1
+        #     if indx == 10:
+        #         break
+        # print("\n")
         return render_template("search_results.jinja2", query=user_query, search_response=response,
                                display_filters=display_filters, applied_filters=applied_filters,
                                sort=sort, sortDir=sortDir, explain=explain, autocompleteSelect=autocompleteSelect)

@@ -1,3 +1,4 @@
+#!/bin/bash
 usage()
 {
   echo "Usage: $0 [-y /path/to/python/indexing/code] [-d /path/to/kaggle/best/buy/datasets] [-p /path/to/bbuy/products/field/mappings] [ -q /path/to/bbuy/queries/field/mappings ] [ -g /path/to/write/logs/to ]"
@@ -5,12 +6,12 @@ usage()
   exit 2
 }
 
-PRODUCTS_JSON_FILE="/workspace/search_fundamentals_course/opensearch/bbuy_products.json"
-QUERIES_JSON_FILE="/workspace/search_fundamentals_course/opensearch/bbuy_queries.json"
-DATASETS_DIR="/workspace/datasets"
-PYTHON_LOC="/workspace/search_fundamentals_course/week1"
+PRODUCTS_JSON_FILE=`pwd`/week2/conf/bbuy_products.json
+QUERIES_JSON_FILE=`pwd`/week2/conf/bbuy_queries.json
+DATASETS_DIR=`pwd`/datasets
+PYTHON_LOC=`pwd`/week2
 
-LOGS_DIR="/workspace/logs"
+LOGS_DIR=`pwd`/logs
 
 while getopts ':p:q:g:y:d:h' c
 do
@@ -26,7 +27,10 @@ do
 done
 shift $((OPTIND -1))
 
+rm -rf $LOGS_DIR
 mkdir $LOGS_DIR
+touch $LOGS_DIR/index_products.log
+touch $LOGS_DIR/index_queries.log
 
 echo "Creating index settings and mappings"
 echo " Product file: $PRODUCTS_JSON_FILE"
