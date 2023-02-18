@@ -172,7 +172,7 @@ def create_query(user_query, filters, sort="_score", sortDir="desc", size=10, in
     if include_aggs:
         add_aggs(query_obj)
 
-    if priors_gb:
+    if priors_gb and user_query != "*":
         add_click_priors(query_obj=query_obj, user_query=user_query, priors_gb=priors_gb)
 
     if should_add_spelling_suggestions:
@@ -206,6 +206,9 @@ def add_spelling_suggestions(query_obj, user_query):
        "term_suggest": {
             "term" : {
                 "field" : "suggest.text",
+                # ipod case, if we don't care about doc popularity, can replace "always"
+                # popular: Only suggest suggestions that occur in more docs than the original suggest text term.
+                # prance case: it is caused due to "suggest.text" ananlyzer being "analyzer": "english"
                 "suggest_mode": "popular",
                 "min_word_length": 3,
             }
