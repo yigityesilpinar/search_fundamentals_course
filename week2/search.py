@@ -104,7 +104,7 @@ def query():
         if explain_val == "true":
             explain = True
 
-        query_obj = qu.create_query(user_query,  [], sort, sortDir, size=20, priors_gb=priors_gb)  # We moved create_query to a utility class so we could use it elsewhere.
+        query_obj = qu.create_query(user_query,  [], sort, sortDir, size=20, priors_gb=priors_gb, should_add_spelling_suggestions=True)  # We moved create_query to a utility class so we could use it elsewhere.
         ##### W2, L1, S2
 
         ##### W2, L2, S2
@@ -119,7 +119,7 @@ def query():
             explain = True
         if filters_input:
             (filters, display_filters, applied_filters) = process_filters(filters_input)
-        query_obj = qu.create_query(user_query,  filters, sort, sortDir, size=20, priors_gb=priors_gb)
+        query_obj = qu.create_query(user_query,  filters, sort, sortDir, size=20, priors_gb=priors_gb, should_add_spelling_suggestions=True)
         #### W2, L1, S2
 
         ##### W2, L2, S2

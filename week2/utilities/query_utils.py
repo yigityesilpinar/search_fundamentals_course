@@ -13,7 +13,7 @@ def create_stats_query(aggs, extended=True):
 
 
 # Hardcoded query here.  Better to use search templates or other query config.
-def create_query(user_query, filters, sort="_score", sortDir="desc", size=10, include_aggs=True, highlight=True, source=None, priors_gb=None):
+def create_query(user_query, filters, sort="_score", sortDir="desc", size=10, include_aggs=True, highlight=True, source=None, priors_gb=None, should_add_spelling_suggestions=False):
     query_obj = {
         'size': size,
         "sort":[
@@ -174,7 +174,10 @@ def create_query(user_query, filters, sort="_score", sortDir="desc", size=10, in
 
     if priors_gb:
         add_click_priors(query_obj=query_obj, user_query=user_query, priors_gb=priors_gb)
-    
+
+    if should_add_spelling_suggestions:
+        add_spelling_suggestions(query_obj=query_obj, user_query=user_query)
+
     return query_obj
 
 
@@ -184,16 +187,30 @@ def create_query(user_query, filters, sort="_score", sortDir="desc", size=10, in
 # Give a user query from the UI and the query object we've built so far, adding in spelling suggestions
 def add_spelling_suggestions(query_obj, user_query):
     #### W2, L2, S1
-    print("TODO: IMPLEMENT ME")
-    #query_obj["suggest"] = {
-    #    "text": user_query,
-    #    "phrase_suggest": {
-
-    #    },
-    #    "term_suggest": {
-
-    #    }
-    #}
+    query_obj["suggest"] = {
+       "text": user_query,
+       "phrase_suggest": {
+            "phrase" : {
+                "field" : "suggest.trigrams",
+                "direct_generator" : [{
+                    "field" : "suggest.trigrams",
+                    "suggest_mode" : "popular",
+                    "min_word_length": 2,
+                }],
+                "highlight": {
+                    "pre_tag": "<em>",
+                    "post_tag": "</em>"
+                }
+            }
+       },
+       "term_suggest": {
+            "term" : {
+                "field" : "suggest.text",
+                "suggest_mode": "popular",
+                "min_word_length": 3,
+            }
+       }
+    }
 
 
 # Given the user query from the UI, the query object we've built so far and a Pandas data GroupBy data frame,
