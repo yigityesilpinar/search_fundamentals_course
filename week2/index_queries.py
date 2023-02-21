@@ -40,6 +40,7 @@ def main(source_file: str, index_name: str):
     client = get_opensearch()
     # Load the data into a Pandas DataFrame
     df = pd.read_csv(source_file)
+    # user,sku,category,query,click_time,query_time
     # Drop some columns we don't need.  We'll keep category for those who want to do more advanced suggesters that filter by category
     df.drop("click_time", axis=1, inplace=True)
     df.drop("query_time", axis=1, inplace=True)

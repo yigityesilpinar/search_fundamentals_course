@@ -8,10 +8,10 @@
       Did you mean?
     {% endif %}
     {% if search_response.suggest.phrase_suggest is defined and search_response.suggest.phrase_suggest|length > 0 and search_response.suggest.phrase_suggest[0].options|length > 0 %}
-      <label>Phrase suggestions</label>: {{ search_response.suggest.phrase_suggest[0].options[0].highlighted }}
+      <label>Phrase suggestions</label>: <a style="color:blue;" href="/search/query?&query={{ search_response.suggest.phrase_suggest[0].options[0].text }}">{{ search_response.suggest.phrase_suggest[0].options[0].highlighted }}</a>
     {% endif %}
     {% if search_response.suggest.term_suggest is defined and search_response.suggest.term_suggest|length > 0 and search_response.suggest.term_suggest[0].options|length > 0 %}
-      <label>Term suggestions</label>: {{ search_response.suggest.term_suggest[0].options[0].text }}
+      <label>Term suggestions</label>: <a style="color:blue;" href="/search/query?&query={{ search_response.suggest.term_suggest[0].options[0].text }}">{{ search_response.suggest.term_suggest[0].options[0].text }}</a>
     {% endif %}
   </div>
 {% endif %}
